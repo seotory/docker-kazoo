@@ -1,0 +1,110 @@
+version: '3'
+services:
+  zoo1:
+    image: zookeeper
+    restart: always
+    hostname: zoo1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+    volumes:
+      - ./zookeeper/data/zoo1:/data
+      # - ./zookeeper/conf/zoo1/zoo.cfg:/conf/zoo.cfg
+
+  zoo2:
+    image: zookeeper
+    restart: always
+    hostname: zoo2
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+    volumes:
+      - ./zookeeper/data/zoo2:/data
+      # - ./zookeeper/conf/zoo2/zoo.cfg:/conf/zoo.cfg
+
+  zoo3:
+    image: zookeeper
+    restart: always
+    hostname: zoo3
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
+    volumes:
+      - ./zookeeper/data/zoo3:/data
+      # - ./zookeeper/conf/zoo3/zoo.cfg:/conf/zoo.cfg
+
+  kafka1:
+    image: confluentinc/cp-kafka:latest
+    # network_mode: host
+    hostname: kafka1
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+    # volumes:
+      # - ./kafka/conf/kafka1/:/etc/kafka
+      # - ./kafka/data/kafka1:/var/lib/kafka/data
+    # extra_hosts:
+    #     - "moby:127.0.0.1"
+
+  kafka2:
+    image: confluentinc/cp-kafka:latest
+    # network_mode: host
+    hostname: kafka2
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    ports:
+      - 39092:39092
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:39092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka2:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:39092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+    # volumes:
+    #   - ./kafka/conf/kafka2/:/etc/kafka
+    # extra_hosts
+    #     - "moby:127.0.0.1"
+
+  kafka3:
+    image: confluentinc/cp-kafka:latest
+    # network_mode: host
+    hostname: kafka3
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    ports:
+      - 49092:49092
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:49092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka3:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:49092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+    # volumes:
+    #   - ./kafka/conf/kafka3/:/etc/kafka
+    # extra_hosts:
+    #     - "moby:127.0.0.1"
