@@ -11,7 +11,7 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
     volumes:
-      - ./zookeeper/data/zoo1:/data
+      - ${PWD}/zookeeper/data/zoo1:/data
       # - ./zookeeper/conf/zoo1/zoo.cfg:/conf/zoo.cfg
 
   zoo2:
@@ -25,7 +25,7 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
     volumes:
-      - ./zookeeper/data/zoo2:/data
+      - ${PWD}/zookeeper/data/zoo2:/data
       # - ./zookeeper/conf/zoo2/zoo.cfg:/conf/zoo.cfg
 
   zoo3:
@@ -39,7 +39,7 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
     volumes:
-      - ./zookeeper/data/zoo3:/data
+      - ${PWD}/zookeeper/data/zoo3:/data
       # - ./zookeeper/conf/zoo3/zoo.cfg:/conf/zoo.cfg
 
   kafka1:
@@ -59,8 +59,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-    # volumes:
-      # - ./kafka/conf/kafka1/:/etc/kafka
+    volumes:
+      - ${PWD}/kafka/bin/common/kafka-server-start:/usr/bin/kafka-server-start
       # - ./kafka/data/kafka1:/var/lib/kafka/data
     # extra_hosts:
     #     - "moby:127.0.0.1"
@@ -82,7 +82,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka2:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:39092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-    # volumes:
+    volumes:
+      - ${PWD}/kafka/bin/common/kafka-server-start:/usr/bin/kafka-server-start
     #   - ./kafka/conf/kafka2/:/etc/kafka
     # extra_hosts
     #     - "moby:127.0.0.1"
@@ -104,7 +105,22 @@ services:
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka3:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:49092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-    # volumes:
+    volumes:
+      - ${PWD}/kafka/bin/common/kafka-server-start:/usr/bin/kafka-server-start
     #   - ./kafka/conf/kafka3/:/etc/kafka
     # extra_hosts:
     #     - "moby:127.0.0.1"
+
+  kafkaManager:
+    image: sheepkiller/kafka-manager
+    hostname: kafkaManager
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    ports:
+      - 9000:9000
+    environment:
+      ZK_HOSTS: zoo1:2181,zoo2:2182,zoo3:2183
+      APPLICATION_SECRET: letmein
+    command: -Dpidfile.path=/dev/null
