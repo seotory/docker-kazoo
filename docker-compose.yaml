@@ -11,7 +11,7 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
     volumes:
-      - ${PWD}/zookeeper/data/zoo1:/data
+      - ${PWD}/docker/data/zookeeper/zoo1:/data
       # - ./zookeeper/conf/zoo1/zoo.cfg:/conf/zoo.cfg
 
   zoo2:
@@ -25,7 +25,7 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
     volumes:
-      - ${PWD}/zookeeper/data/zoo2:/data
+      - ${PWD}/docker/data/zookeeper/zoo2:/data
       # - ./zookeeper/conf/zoo2/zoo.cfg:/conf/zoo.cfg
 
   zoo3:
@@ -39,12 +39,11 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
     volumes:
-      - ${PWD}/zookeeper/data/zoo3:/data
+      - ${PWD}/docker/data/zookeeper/zoo3:/data
       # - ./zookeeper/conf/zoo3/zoo.cfg:/conf/zoo.cfg
 
   kafka1:
     image: confluentinc/cp-kafka:latest
-    # network_mode: host
     hostname: kafka1
     depends_on:
       - zoo1
@@ -52,22 +51,20 @@ services:
       - zoo3
     ports:
       - 29092:29092
+      - 29999:9999
     environment:
+      JMX_PORT: 9999
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
       # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-    volumes:
-      - ${PWD}/kafka/bin/common/kafka-server-start:/usr/bin/kafka-server-start
+    # volumes:
       # - ./kafka/data/kafka1:/var/lib/kafka/data
-    # extra_hosts:
-    #     - "moby:127.0.0.1"
 
   kafka2:
     image: confluentinc/cp-kafka:latest
-    # network_mode: host
     hostname: kafka2
     depends_on:
       - zoo1
@@ -76,21 +73,18 @@ services:
     ports:
       - 39092:39092
     environment:
+      JMX_PORT: 9999
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
       # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:39092
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka2:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:39092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-    volumes:
-      - ${PWD}/kafka/bin/common/kafka-server-start:/usr/bin/kafka-server-start
+    # volumes:
     #   - ./kafka/conf/kafka2/:/etc/kafka
-    # extra_hosts
-    #     - "moby:127.0.0.1"
 
   kafka3:
     image: confluentinc/cp-kafka:latest
-    # network_mode: host
     hostname: kafka3
     depends_on:
       - zoo1
@@ -99,20 +93,18 @@ services:
     ports:
       - 49092:49092
     environment:
+      JMX_PORT: 9999
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
       # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:49092
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka3:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:49092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-    volumes:
-      - ${PWD}/kafka/bin/common/kafka-server-start:/usr/bin/kafka-server-start
+    # volumes:
     #   - ./kafka/conf/kafka3/:/etc/kafka
-    # extra_hosts:
-    #     - "moby:127.0.0.1"
 
   kafkaManager:
-    image: sheepkiller/kafka-manager
+    image: hlebalbau/kafka-manager
     hostname: kafkaManager
     depends_on:
       - zoo1
@@ -121,6 +113,6 @@ services:
     ports:
       - 9000:9000
     environment:
-      ZK_HOSTS: zoo1:2181,zoo2:2182,zoo3:2183
+      ZK_HOSTS: zoo1:2181,zoo2:2181,zoo3:2181
       APPLICATION_SECRET: letmein
     command: -Dpidfile.path=/dev/null

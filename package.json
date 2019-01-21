@@ -1,0 +1,26 @@
+{
+  "name": "docker-kazoo",
+  "version": "1.0.0",
+  "description": "https://kafka.apache.org/quickstart",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "kafka-node": "^4.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seotory/docker-kazoo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seotory/docker-kazoo/issues"
+  },
+  "homepage": "https://github.com/seotory/docker-kazoo#readme"
+}
